@@ -1,37 +1,44 @@
-import React, { useState, useEffect, useRef } from "react";
-import "./Chat.css";
-import Message from "./Message";
-import { Button } from "./Assests/Button";
-import { collgeList } from "./Assests/Constants";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { IoIosHelpCircle } from "react-icons/io";
 import { RiSendPlaneFill } from "react-icons/ri";
-import SpeechToTextButton from "./hooks/SpeechToTextButton";
 import { FaRegStopCircle } from "react-icons/fa";
-import { RiDeleteBin5Fill } from "react-icons/ri";
-import { MdOutlineFeedback } from "react-icons/md";
-import { getCookie, setCookie } from "./configurations/cookies";
+import "./Chat.css";
+import Message from "../Message";
+import Issuebtn from "../Issuebtn";
+import SpeechToTextButton from "../hooks/SpeechToTextButton";
+import { collgeList } from "../Assests/Constants";
+import { getCookie, setCookie } from "../configurations/cookies";
+import { Button } from "../Assests/Button";
+import Feedback from "./Feedback";
+import ChatContext from "../../context/ChatContext";
 
 export const Chat = () => {
-  const [messages, setMessages] = useState([]);
+  const {
+    messages,
+    setMessages,
+    paymentBtn,
+    setPaymentBtnBtn,
+    userId,
+    setUserId,
+  } = useContext(ChatContext);
   const [inputText, setInputText] = useState("");
-  const [paymentBtn, setPaymentBtnBtn] = useState(false);
   const [helpBtn, setHelpbtn] = useState(false);
   const [helpSubBtn, setHelpSubBtn] = useState("");
   const [selectedBtn, setSelectedBtn] = useState("");
   const [issueBtn, setIssueBtn] = useState("");
   const [initialMsg, setInitialMsg] = useState(false);
   const [clgList, setClgList] = useState(false);
-  const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
-  const [feedback, setFeedBack] = useState("");
-  const [feedbackState, setFeedBackState] = useState(false);
   const [writing, setWriting] = useState(false);
   const [user, setUser] = useState({
     name: "",
     email: "",
   });
-  const writingRef = useRef(true);
+  const isSpeechRecognitionSupported =
+    "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
+
+  const writingRef = useRef(false);
 
   useEffect(() => {
     const getCookieData = JSON.parse(getCookie("userInfo"));
@@ -62,20 +69,32 @@ export const Chat = () => {
         }
       })();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const typewriterEffect = (text, setMessage, onTypingComplete) => {
-    let displayedText = "";
+  const typewriterEffect = (text, onTypingComplete) => {
     let i = 0;
     const delay = 50;
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        text: "",
+        sender: "assistant",
+      },
+    ]);
 
     function typeNextChar() {
       if (i < text.length && writingRef.current) {
-        displayedText += text[i];
-        setMessage((prevMessages) => [
-          ...prevMessages.slice(0, prevMessages.length - 1),
-          { text: displayedText, sender: "assistant" },
+        const updatedMessage = {
+          text: text.slice(0, i + 1),
+          sender: "assistant",
+        };
+
+        setMessages((prevMessages) => [
+          ...prevMessages.slice(0, -1), // Remove the last message
+          updatedMessage,
         ]);
+
         i++;
         setTimeout(typeNextChar, delay);
       } else {
@@ -122,8 +141,12 @@ export const Chat = () => {
       if (!response.ok) {
         throw new Error(`Network response was not ok: ${response.statusText}`);
       }
+      let responseData;
 
-      const responseData = await response.json();
+      if (response.status === 200) {
+        writingRef.current = true;
+        responseData = await response.json();
+      }
       const assistantMessage = {
         text: responseData.message.trim(),
         sender: "assistant",
@@ -159,7 +182,7 @@ export const Chat = () => {
 
       // Apply typewriter effect to assistant message
       setWriting(true);
-      typewriterEffect(assistantMessage.text, setMessages, () => {
+      typewriterEffect(assistantMessage.text, () => {
         setWriting(false); // Set writing to false when typing is complete
       });
     } catch (error) {
@@ -170,28 +193,6 @@ export const Chat = () => {
     setInputText("");
   };
 
-  const handleFeedback = async () => {
-    const data = {
-      user_id: userId,
-      feedback_message: feedback,
-    };
-    const response = await fetch("http://192.168.88.38:5005/feedback", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (response.status === 200) {
-      setFeedBackState(false);
-      const responseData = await response.json();
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: responseData.message, sender: "assistant" },
-      ]);
-    }
-  };
   const handleFirstMsg = async () => {
     try {
       const url = "http://192.168.88.38:5005/start_chat";
@@ -241,7 +242,6 @@ export const Chat = () => {
           user_name: user.name,
           user_email: user.email,
         });
-        console.log(setCookieData);
         setCookie("userInfo", setCookieData);
         setInitialMsg(true);
         setHelpSubBtn("");
@@ -392,21 +392,6 @@ export const Chat = () => {
                 >
                   Courses Offered by RU
                 </button>
-                {/* <button className="bg-blue-500 px-2 rounded-lg mb-2 w-1/3">
-                  Admission Requirement
-                </button>
-                <button className="bg-blue-500 px-2 rounded-lg mb-2 w-1/3">
-                  Academic Calender
-                </button>
-                <button className="bg-blue-500 px-2 rounded-lg mb-2 w-1/3">
-                  Campus Facilities
-                </button>
-                <button
-                  className="bg-blue-500 px-2 rounded-lg mb-2 w-1/3"
-                  onClick={() => setHelpSubBtn("")}
-                >
-                  Cancel
-                </button> */}
               </div>
             )}
           </div>
@@ -432,50 +417,7 @@ export const Chat = () => {
       </div>
       <div className="bg-white p-0 mt-auto">
         {isDropdownOpen && (
-          <>
-            {feedbackState && (
-              <div className="px-6">
-                <p className="text-[#041871] font-semibold text-center">
-                  Write Your Feedback
-                </p>
-                <textarea
-                  className="w-full mt-2 border"
-                  onChange={(e) => setFeedBack(e.target.value)}
-                ></textarea>
-                <div className="w-full flex justify-end mt-2">
-                  <button
-                    className="bg-blue-400 p-1 rounded-md"
-                    onClick={handleFeedback}
-                  >
-                    Submit
-                  </button>
-                  <button
-                    className="bg-blue-400 p-1 rounded-md ml-2"
-                    onClick={() => setFeedBackState(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-            <div className="ml-2">
-              <div
-                className="text-[#027BFF] p-1 rounded-md flex items-center cursor-pointer"
-                onClick={() => setFeedBackState(true)}
-              >
-                <MdOutlineFeedback className="mr-2 items-center" /> Feedback
-              </div>
-              <div
-                className="text-[#027BFF] p-1 rounded-md flex items-center cursor-pointer"
-                onClick={() => {
-                  setMessages([]);
-                  setHelpbtn(false);
-                }}
-              >
-                <RiDeleteBin5Fill className="mr-2 items-center" /> Clear Chat
-              </div>
-            </div>
-          </>
+          <Feedback setMessages={setMessages} setHelpbtn={setHelpbtn} />
         )}
         <div className={`mb-2`}>
           <div
@@ -512,10 +454,12 @@ export const Chat = () => {
             >
               <IoIosHelpCircle fontSize={"30px"} />
             </button>
-            <div className="py-1 flex border border-gray-400 w-[90%] rounded-md bg-white">
-              <div className=" w-4/5">
+            <div className="flex border border-gray-400 w-[90%] p-1 rounded-md bg-white">
+              <div
+                className={isSpeechRecognitionSupported ? "w-4/5" : "w-[90%]"}
+              >
                 <input
-                  className="flex-grow p-2 rounded-l-md focus:outline-none focus:ring focus:border-purple-500 w-full"
+                  className="flex-grow p-2 rounded-l-md focus:ring focus:border-purple-500 w-full"
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
@@ -537,119 +481,20 @@ export const Chat = () => {
                   </button>
                 ) : (
                   <button
-                    className="px-[10px] rounded-full mr-1 bg-blue-300"
+                    className="px-[10px] rounded-full mr-1 ml-2 bg-blue-300"
                     onClick={() => handleSendMessage()}
                   >
                     <RiSendPlaneFill fontSize={"20px"} color="white" />
                   </button>
                 )}
-                <SpeechToTextButton handleSendMessage={handleSendMessage} />
+                {isSpeechRecognitionSupported && (
+                  <SpeechToTextButton handleSendMessage={handleSendMessage} />
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const Issuebtn = ({
-  setIssueBtn,
-  issueBtn,
-  setMessages,
-  setSelectedBtn,
-  setPaymentBtnBtn,
-  typewriterEffect,
-  setWriting,
-}) => {
-  const handleIssueBtn = async () => {
-    const userMessage = { text: issueBtn, sender: "user" };
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    try {
-      const url = "http://192.168.88.38:5005/webhook";
-      const data = {
-        message: {
-          text: issueBtn,
-        },
-      };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Network response was not ok: ${response.statusText}`);
-      }
-
-      const responseData = await response.json();
-
-      const assistantMessage = {
-        text: responseData.message.trim(),
-        sender: "assistant",
-      };
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: assistantMessage.text, sender: "assistant" },
-      ]);
-      setWriting(true);
-      // Apply typewriter effect to assistant message
-      typewriterEffect(assistantMessage.text, setMessages);
-    } catch (error) {
-      console.error("Error:", error.message);
-    }
-    setIssueBtn("");
-  };
-  return (
-    <div className="mt-2 flex flex-col items-end">
-      <button
-        className="bg-blue-200 px-2 rounded-lg mb-2 w-1/3"
-        onClick={() => {
-          setIssueBtn("Payment_Procedure");
-          setSelectedBtn("");
-          setPaymentBtnBtn(false);
-          handleIssueBtn();
-        }}
-      >
-        Procedure
-      </button>
-      <button
-        className="bg-blue-200 px-2 rounded-lg mb-2 w-1/3"
-        onClick={() => {
-          setIssueBtn("Payment_Failure");
-          setSelectedBtn("");
-          setPaymentBtnBtn(false);
-          handleIssueBtn();
-        }}
-      >
-        Failure
-      </button>
-      <button
-        className="bg-blue-200 px-2 rounded-lg mb-2 w-1/3"
-        onClick={() => {
-          setIssueBtn("Double_Payment");
-          setSelectedBtn("");
-          setPaymentBtnBtn(false);
-          handleIssueBtn();
-        }}
-      >
-        Double Payment
-      </button>
-      <button
-        className="bg-blue-200 px-2 rounded-lg w-1/3"
-        onClick={() => {
-          setIssueBtn("Payment_Auto-reverse");
-          setSelectedBtn("");
-          setPaymentBtnBtn(false);
-          handleIssueBtn();
-        }}
-      >
-        Auto-reverse
-      </button>
     </div>
   );
 };

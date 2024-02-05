@@ -1,14 +1,13 @@
 import "./App.css";
-import { Chat } from "./Chat";
-// import SpeechToTextButton from "./hooks/SpeechToTextButton";
+import { Chat } from "./components/chat/Chat";
+import UserContextProvider from "./context/ChatContextProvider";
 
 function App() {
   return (
-    <div className="App">
-      <div className="py-2 h-[100vh]">
+    <div className="App py-2 h-[100vh]">
+      <UserContextProvider>
         <Chat />
-      </div>
-      {/* <SpeechToTextButton /> */}
+      </UserContextProvider>
     </div>
   );
 }

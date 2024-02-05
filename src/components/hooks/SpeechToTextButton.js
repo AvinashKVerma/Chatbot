@@ -55,7 +55,7 @@ const SpeechToTextButton = ({ handleSendMessage }) => {
 
   return (
     <button
-      className="px-[10px] rounded-full mr-1 bg-blue-300"
+      className="px-[10px] rounded-full bg-blue-300"
       onClick={handleButtonClick}
       disabled={!recognition}
     >
