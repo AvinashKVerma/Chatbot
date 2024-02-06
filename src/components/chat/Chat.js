@@ -149,7 +149,7 @@ export const Chat = () => {
       setInputText("");
     }
   };
-  console.log(messages);
+
   const handleFirstMsg = async () => {
     try {
       const url = "http://192.168.88.38:5005/start_chat";

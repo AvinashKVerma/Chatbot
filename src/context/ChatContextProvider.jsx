@@ -16,6 +16,17 @@ const UserContextProvider = ({ children }) => {
   const [writing, setWriting] = useState(false);
   const writingRef = useRef(false);
   const [inputText, setInputText] = useState("");
+  const [correction, setCorrection] = useState({
+    user_id: "",
+    incorrectData: "",
+    correctData: "",
+    college_name: "",
+    college_code: "",
+    branch: "",
+    year: "",
+    semester: "",
+  });
+
   return (
     <ChatContext.Provider
       value={{
@@ -38,6 +49,8 @@ const UserContextProvider = ({ children }) => {
         writingRef,
         writing,
         setWriting,
+        correction,
+        setCorrection,
       }}
     >
       {children}
