@@ -1,15 +1,26 @@
 import React, { useContext } from "react";
 import { Button } from "../Assests/Button";
 import ChatContext from "../../context/ChatContext";
-import { helpButton } from "../Assests/Constants";
 
-const HelpButton = ({ setClgList }) => {
-  const { helpBtn, helpSubBtn, setHelpSubBtn, setHelpbtn } =
-    useContext(ChatContext);
-
+const HelpButton = () => {
+  const { helpBtn, setHelpSubBtn, setHelpbtn } = useContext(ChatContext);
   return (
     <>
-      {helpBtn === true && (
+      {Array.isArray(helpBtn) && (
+        <div className="flex flex-col">
+          {helpBtn.map((btnTitle, i) => {
+            return (
+              <Button
+                key={i}
+                btnTitle={btnTitle}
+                setHelpbtn={setHelpbtn}
+                setHelpSubBtn={setHelpSubBtn}
+              />
+            );
+          })}
+        </div>
+      )}
+      {/* {helpBtn === true && (
         <div className="flex flex-col">
           {Object.keys(helpButton).map((btnTitle, i) => (
             <Button
@@ -37,7 +48,7 @@ const HelpButton = ({ setClgList }) => {
             </div>
           ))}
         </div>
-      )}
+      )} */}
     </>
   );
 };

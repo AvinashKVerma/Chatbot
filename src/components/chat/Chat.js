@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { IoIosHelpCircle } from "react-icons/io";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { FaRegStopCircle } from "react-icons/fa";
@@ -11,6 +11,8 @@ import { getCookie, setCookie } from "../configurations/cookies";
 import Feedback from "./Feedback";
 import ChatContext from "../../context/ChatContext";
 import HelpButton from "./HelpButton";
+import { apiRequest } from "../configurations/api";
+import { typewriterEffect } from "../configurations/typerWriter";
 
 export const Chat = () => {
   const {
@@ -22,23 +24,24 @@ export const Chat = () => {
     setUserId,
     setHelpbtn,
     setHelpSubBtn,
+    loading,
+    setLoading,
+    user,
+    setUser,
+    inputText,
+    setInputText,
+    writingRef,
+    writing,
+    setWriting,
   } = useContext(ChatContext);
-  const [inputText, setInputText] = useState("");
+
   const [selectedBtn, setSelectedBtn] = useState("");
   const [issueBtn, setIssueBtn] = useState("");
   const [initialMsg, setInitialMsg] = useState(false);
   const [clgList, setClgList] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
-  const [writing, setWriting] = useState(false);
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-  });
   const isSpeechRecognitionSupported =
     "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
-
-  const writingRef = useRef(false);
 
   useEffect(() => {
     const getCookieData = JSON.parse(getCookie("userInfo"));
@@ -72,127 +75,81 @@ export const Chat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const typewriterEffect = (text, onTypingComplete) => {
-    let i = 0;
-    const delay = 50;
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        text: "",
-        sender: "assistant",
-      },
-    ]);
-
-    function typeNextChar() {
-      if (i < text.length && writingRef.current) {
-        const updatedMessage = {
-          text: text.slice(0, i + 1),
-          sender: "assistant",
-        };
-
-        setMessages((prevMessages) => [
-          ...prevMessages.slice(0, -1), // Remove the last message
-          updatedMessage,
-        ]);
-
-        i++;
-        setTimeout(typeNextChar, delay);
-      } else {
-        // Typing is complete or stopped, execute the callback
-        onTypingComplete();
-      }
-    }
-
-    typeNextChar(); // Start the typing process
-  };
-
   const stopTypingEffect = () => {
     writingRef.current = false; // Update the mutable object
   };
 
   const handleSendMessage = async (input) => {
-    if (!input) {
-      if (inputText.trim() === "") return;
+    if (!input && (!inputText || inputText.trim() === "")) {
+      return; // Return if input is empty or contains only whitespace
     }
 
-    const userMessage = { text: input ? input : inputText, sender: "user" };
+    const userMessage = {
+      text: input ? input : inputText.trim(),
+      sender: "user",
+    };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setLoading(true);
 
+    const data = {
+      message: {
+        text: input ? input.trim() : inputText.trim(),
+      },
+      user_email: user.email,
+      user_id: userId,
+    };
+
+    const assistantMessage = {
+      text: "",
+      sender: "assistant",
+    };
+
     try {
-      const url = "http://192.168.88.38:5005/webhook";
-      const data = {
-        message: {
-          text: input ? input : inputText,
-        },
-        user_email: user.email, // Add this line to include user_email in the payload
-
-        user_id: userId,
-      };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Network response was not ok: ${response.statusText}`);
-      }
-      let responseData;
-
-      if (response.status === 200) {
+      const response = await apiRequest("webhook", data, "POST");
+      if (response) {
         writingRef.current = true;
-        responseData = await response.json();
+        if (response.buttons) {
+          setHelpbtn(response.buttons);
+        } else {
+          assistantMessage.text = response.message.trim();
+        }
       }
-      const assistantMessage = {
-        text: responseData.message.trim(),
-        sender: "assistant",
-      };
-      if (assistantMessage.text === "Choose Payment purpose:-") {
-        setPaymentBtnBtn(true);
-      }
-      if (
-        assistantMessage.text ===
-        "I can help you with your to solve your querry about university. You can ask me things like:"
-      ) {
-        setHelpSubBtn("");
-        setHelpbtn(true);
-      } else {
-        setHelpbtn(false);
-      }
-      if (
-        assistantMessage.text ===
-        "Thanks for providing your name and email. You can now start the chat!"
-      ) {
-        setInitialMsg(true);
-      }
-      if (
-        assistantMessage.text ===
-        "Please provide a valid name and email to start the chat."
-      ) {
-        setInitialMsg("invalid");
-      }
-      // setMessages((prevMessages) => [
-      //   ...prevMessages,
-      //   { text: assistantMessage.text, sender: "assistant" },
-      // ]);
 
-      // Apply typewriter effect to assistant message
-      setWriting(true);
-      typewriterEffect(assistantMessage.text, () => {
-        setWriting(false); // Set writing to false when typing is complete
-      });
+      switch (assistantMessage.text) {
+        case "Choose Payment purpose:-":
+          setPaymentBtnBtn(true);
+          break;
+        case "I can help you with your to solve your querry about university. You can ask me things like:":
+          setHelpSubBtn("");
+          // setHelpbtn(true);
+          break;
+        case "Thanks for providing your name and email. You can now start the chat!":
+          setInitialMsg(true);
+          break;
+        case "Please provide a valid name and email to start the chat.":
+          setInitialMsg("invalid");
+          break;
+        default:
+      }
+      if (assistantMessage.text !== "") {
+        setWriting(true);
+        typewriterEffect(
+          assistantMessage.text,
+          () => {
+            setWriting(false); // Set writing to false when typing is complete
+          },
+          setMessages,
+          writingRef
+        );
+      }
     } catch (error) {
-      console.error("Error:", error.message);
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+      setInputText("");
     }
-
-    setLoading(false);
-    setInputText("");
   };
-
+  console.log(messages);
   const handleFirstMsg = async () => {
     try {
       const url = "http://192.168.88.38:5005/start_chat";
@@ -328,7 +285,7 @@ export const Chat = () => {
                 setIssueBtn={setIssueBtn}
                 issueBtn={issueBtn}
                 setMessages={setMessages}
-                typewriterEffect={typewriterEffect}
+                // typewriterEffect={typewriterEffect}
                 setPaymentBtnBtn={setPaymentBtnBtn}
               />
             )}
@@ -345,7 +302,7 @@ export const Chat = () => {
                 setIssueBtn={setIssueBtn}
                 issueBtn={issueBtn}
                 setMessages={setMessages}
-                typewriterEffect={typewriterEffect}
+                // typewriterEffect={typewriterEffect}
                 setPaymentBtnBtn={setPaymentBtnBtn}
               />
             )}
@@ -362,7 +319,7 @@ export const Chat = () => {
                 setIssueBtn={setIssueBtn}
                 issueBtn={issueBtn}
                 setMessages={setMessages}
-                typewriterEffect={typewriterEffect}
+                // typewriterEffect={typewriterEffect}
                 setPaymentBtnBtn={setPaymentBtnBtn}
               />
             )}

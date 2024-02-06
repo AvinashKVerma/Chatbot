@@ -8,16 +8,3 @@ export const collgeList = [
   "Management Institutions in Ranchi University?",
   "Constituent Colleges in Ranchi University?",
 ];
-
-export const helpButton = {
-  Support: [],
-  Complaint: [],
-  "Student Help": [
-    "Mother's Name Correction",
-    "Father's Name Correction",
-    "Correct DOB",
-    "Correct Migration Certificate",
-  ],
-  Enquiry: [],
-  Information: ["College list in RU", "Courses Offered by RU"],
-};
