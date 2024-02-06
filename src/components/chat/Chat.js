@@ -8,9 +8,9 @@ import Issuebtn from "../Issuebtn";
 import SpeechToTextButton from "../hooks/SpeechToTextButton";
 import { collgeList } from "../Assests/Constants";
 import { getCookie, setCookie } from "../configurations/cookies";
-import { Button } from "../Assests/Button";
 import Feedback from "./Feedback";
 import ChatContext from "../../context/ChatContext";
+import HelpButton from "./HelpButton";
 
 export const Chat = () => {
   const {
@@ -20,10 +20,10 @@ export const Chat = () => {
     setPaymentBtnBtn,
     userId,
     setUserId,
+    setHelpbtn,
+    setHelpSubBtn,
   } = useContext(ChatContext);
   const [inputText, setInputText] = useState("");
-  const [helpBtn, setHelpbtn] = useState(false);
-  const [helpSubBtn, setHelpSubBtn] = useState("");
   const [selectedBtn, setSelectedBtn] = useState("");
   const [issueBtn, setIssueBtn] = useState("");
   const [initialMsg, setInitialMsg] = useState(false);
@@ -368,34 +368,7 @@ export const Chat = () => {
             )}
           </div>
         )}
-        {helpBtn === true && (
-          <div className="flex flex-col">
-            <Button btnTitle={"Support"} setBtn={setHelpSubBtn} />
-            <Button btnTitle={"Complaint"} setBtn={setHelpSubBtn} />
-            <Button btnTitle={"Report"} setBtn={setHelpSubBtn} />
-            <Button btnTitle={"Enquiry"} setBtn={setHelpSubBtn} />
-            <Button btnTitle={"Information"} setBtn={setHelpSubBtn} />
-            {helpSubBtn === "Information" && (
-              <div className="mt-2 flex flex-col items-end">
-                <button
-                  className="bg-blue-200 px-2 rounded-lg mb-2 w-1/2"
-                  onClick={() => {
-                    setHelpbtn(false);
-                    setClgList(true);
-                  }}
-                >
-                  College list in RU
-                </button>
-                <button
-                  className="bg-blue-200 px-2 rounded-lg mb-2 w-1/2"
-                  // onClick={}
-                >
-                  Courses Offered by RU
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        <HelpButton setClgList={setClgList} />
         {clgList && (
           <div className="flex flex-col">
             {collgeList.map((ele, i) => {
@@ -422,7 +395,7 @@ export const Chat = () => {
         <div className={`mb-2`}>
           <div
             onClick={() => setDropdownOpen(!isDropdownOpen)}
-            className={`flex justify-between items-center px-4 mb-1 cursor-pointer p-2 rounded-md`}
+            className="flex justify-between items-center px-4 mb-1 cursor-pointer p-2 rounded-md"
           >
             <p className="text-[#027BFF] text-xs font-normal">
               {isDropdownOpen ? "Hide Option" : "Choose Option"}
@@ -444,7 +417,7 @@ export const Chat = () => {
           </div>
           <div className="flex">
             <button
-              className="p-1 mr-1 bg-blue-400 text-white rounded-md hover:bg-purple-600 w-[10%]"
+              className="flex justify-center items-center text-white"
               onClick={() => {
                 setHelpSubBtn("");
                 setClgList(false);
@@ -452,7 +425,7 @@ export const Chat = () => {
               }}
               title="HELP"
             >
-              <IoIosHelpCircle fontSize={"30px"} />
+              <IoIosHelpCircle fontSize={"45px"} color="#93C5FD" />
             </button>
             <div className="flex border border-gray-400 w-[90%] p-1 rounded-md bg-white">
               <div

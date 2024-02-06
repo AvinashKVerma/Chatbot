@@ -5,6 +5,8 @@ const UserContextProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [paymentBtn, setPaymentBtnBtn] = useState(false);
   const [userId, setUserId] = useState("");
+  const [helpBtn, setHelpbtn] = useState(false);
+  const [helpSubBtn, setHelpSubBtn] = useState("");
   return (
     <ChatContext.Provider
       value={{
@@ -14,6 +16,10 @@ const UserContextProvider = ({ children }) => {
         setPaymentBtnBtn,
         userId,
         setUserId,
+        helpBtn,
+        setHelpbtn,
+        helpSubBtn,
+        setHelpSubBtn,
       }}
     >
       {children}

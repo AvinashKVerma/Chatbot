@@ -1,11 +1,12 @@
 import React from "react";
 
-export const Button = ({ btnTitle, setBtn }) => {
+export const Button = ({ btnTitle, setHelpbtn, setHelpSubBtn }) => {
   return (
     <button
       className="bg-blue-200 rounded-md mt-1"
       onClick={() => {
-        setBtn(btnTitle);
+        setHelpbtn(false);
+        setHelpSubBtn(btnTitle);
         // setSelectedBtn("");
         // setPaymentBtnBtn(false);
         // handleIssueBtn();
