@@ -26,7 +26,7 @@ const UserContextProvider = ({ children }) => {
     year: "",
     semester: "",
   });
-
+  const [field, setField] = useState("");
   return (
     <ChatContext.Provider
       value={{
@@ -51,6 +51,8 @@ const UserContextProvider = ({ children }) => {
         setWriting,
         correction,
         setCorrection,
+        field,
+        setField,
       }}
     >
       {children}

@@ -1,9 +1,10 @@
 import React, { useContext } from "react";
-import { Button } from "../Assests/Button";
+import Button from "../Assests/Button";
 import ChatContext from "../../context/ChatContext";
+import CorrectionForm from "./CorrectionForm";
 
 const HelpButton = () => {
-  const { helpBtn, setHelpSubBtn, setHelpbtn } = useContext(ChatContext);
+  const { helpBtn, setHelpSubBtn, setHelpbtn, field } = useContext(ChatContext);
   return (
     <>
       {Array.isArray(helpBtn) && (
@@ -20,35 +21,7 @@ const HelpButton = () => {
           })}
         </div>
       )}
-      {/* {helpBtn === true && (
-        <div className="flex flex-col">
-          {Object.keys(helpButton).map((btnTitle, i) => (
-            <Button
-              key={i}
-              btnTitle={btnTitle}
-              setHelpbtn={setHelpbtn}
-              setHelpSubBtn={setHelpSubBtn}
-            />
-          ))}
-        </div>
-      )}
-      {helpSubBtn && (
-        <div className="mt-2 flex flex-col items-end">
-          {helpButton[helpSubBtn].map((buttonText, j) => (
-            <div key={j}>
-              <button
-                className="bg-blue-200 px-2 rounded-lg mb-2 w-1/2"
-                onClick={() => {
-                  setHelpbtn(false);
-                  setClgList(true);
-                }}
-              >
-                {buttonText}
-              </button>
-            </div>
-          ))}
-        </div>
-      )} */}
+      {field !== "" && <CorrectionForm field={field} />}
     </>
   );
 };

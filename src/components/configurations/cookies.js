@@ -1,6 +1,6 @@
 const setCookie = (name, value) => {
   const cookieValue = encodeURIComponent(value);
-  document.cookie = name + "=" + cookieValue + "; path=/";
+  document.cookie = `${name}=${cookieValue}; path=/; SameSite=None; Secure`;
 };
 
 function getCookie(name) {

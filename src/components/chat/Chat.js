@@ -50,6 +50,7 @@ export const Chat = () => {
         name: getCookieData.user_name,
         email: getCookieData.user_email,
       });
+      setUserId(getCookieData.user_id);
       (async () => {
         const url = "http://192.168.88.38:5005/New_user";
         const response = await fetch(url, {

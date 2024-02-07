@@ -6,8 +6,9 @@ import ChatContext from "../../context/ChatContext";
 const Feedback = ({ setMessages, setHelpbtn }) => {
   const [feedback, setFeedBack] = useState("");
   const [feedbackState, setFeedBackState] = useState(false);
-  const { userId } = useContext(ChatContext);
+  const { userId, setField } = useContext(ChatContext);
   const handleFeedback = async () => {
+    console.log(userId);
     const data = {
       user_id: userId,
       feedback_message: feedback,
@@ -68,6 +69,7 @@ const Feedback = ({ setMessages, setHelpbtn }) => {
           onClick={() => {
             setMessages([]);
             setHelpbtn(false);
+            setField("");
           }}
         >
           <RiDeleteBin5Fill className="mr-2 items-center" /> Clear Chat
