@@ -18,15 +18,17 @@ const UserContextProvider = ({ children }) => {
   const [inputText, setInputText] = useState("");
   const [correction, setCorrection] = useState({
     user_id: "",
+    problem: "",
+    qIndex: 0,
     incorrectData: "",
     correctData: "",
-    college_name: "",
-    college_code: "",
-    branch: "",
-    year: "",
-    semester: "",
+    docState: false,
+    proof: "",
   });
   const [field, setField] = useState("");
+  const [api, setApi] = useState("");
+  const [correctionForm, setCorrectionForm] = useState(false);
+  const [question, setQuestion] = useState("");
   return (
     <ChatContext.Provider
       value={{
@@ -53,6 +55,12 @@ const UserContextProvider = ({ children }) => {
         setCorrection,
         field,
         setField,
+        api,
+        setApi,
+        correctionForm,
+        setCorrectionForm,
+        question,
+        setQuestion,
       }}
     >
       {children}

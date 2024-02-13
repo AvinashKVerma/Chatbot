@@ -13,9 +13,31 @@ const Button = ({ btnTitle, setHelpbtn }) => {
     writingRef,
     setWriting,
     setField,
+    setCorrection,
+    setCorrectionForm,
   } = useContext(ChatContext);
 
+  const typingMessage = (assistantMessage) => {
+    setWriting(true);
+    typewriterEffect(
+      assistantMessage.text,
+      () => setWriting(false),
+      setMessages,
+      writingRef
+    );
+    setLoading(false);
+  };
+
   const handleButtonClick = async (btnTitle) => {
+    if (
+      btnTitle === "Mother name correction" ||
+      btnTitle === "Father name correction" ||
+      btnTitle === "DOB correction"
+    ) {
+      setCorrection((prevData) => ({ ...prevData, problem: btnTitle }));
+      setCorrectionForm(true);
+      return;
+    }
     setMessages((prevMessages) => [
       ...prevMessages,
       { text: btnTitle, sender: "user" },
@@ -34,6 +56,7 @@ const Button = ({ btnTitle, setHelpbtn }) => {
 
       if (response) {
         if (response.message) {
+          assistantMessage.text = response.message;
           if (response.message === "wrong mother name") {
             setField("Mother's Name");
           }
@@ -43,7 +66,7 @@ const Button = ({ btnTitle, setHelpbtn }) => {
           if (response.message === "wrong dob") {
             setField("DOB");
           }
-          return;
+          // return;
         }
         if (response.buttons) {
           setHelpbtn(response.buttons);
@@ -54,13 +77,7 @@ const Button = ({ btnTitle, setHelpbtn }) => {
       }
 
       if (assistantMessage.text !== "") {
-        setWriting(true);
-        typewriterEffect(
-          assistantMessage.text,
-          () => setWriting(false),
-          setMessages,
-          writingRef
-        );
+        typingMessage(assistantMessage);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -69,6 +86,7 @@ const Button = ({ btnTitle, setHelpbtn }) => {
       setInputText("");
     }
   };
+
   return (
     <>
       <button

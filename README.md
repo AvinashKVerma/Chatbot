@@ -46,7 +46,7 @@ bash
 
     npm start
 
-    The application will be accessible at http://localhost:3000 by default.
+    The application will be accessible at http://192.168.88.38:3000 by default.
 
 Usage
 

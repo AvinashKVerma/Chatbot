@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { IoIosHelpCircle } from "react-icons/io";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { FaRegStopCircle } from "react-icons/fa";
+import { ImBin } from "react-icons/im";
 import "./Chat.css";
 import Message from "../Message";
 import Issuebtn from "../Issuebtn";
@@ -11,7 +12,7 @@ import { getCookie, setCookie } from "../configurations/cookies";
 import Feedback from "./Feedback";
 import ChatContext from "../../context/ChatContext";
 import HelpButton from "./HelpButton";
-import { apiRequest } from "../configurations/api";
+import { apiRequest, validation } from "../configurations/api";
 import { typewriterEffect } from "../configurations/typerWriter";
 
 export const Chat = () => {
@@ -33,6 +34,8 @@ export const Chat = () => {
     writingRef,
     writing,
     setWriting,
+    correction,
+    setCorrection,
   } = useContext(ChatContext);
 
   const [selectedBtn, setSelectedBtn] = useState("");
@@ -52,7 +55,7 @@ export const Chat = () => {
       });
       setUserId(getCookieData.user_id);
       (async () => {
-        const url = "http://192.168.88.38:5005/New_user";
+        const url = `${process.env.REACT_APP_BASE_URL}/New_user`;
         const response = await fetch(url, {
           method: "POST",
           headers: {
@@ -60,16 +63,18 @@ export const Chat = () => {
           },
           body: JSON.stringify(getCookieData),
         });
-        const responseData = await response.json();
-        if (
-          responseData.message ===
-          `Hello, ${getCookieData.user_name}, how can I help you today?`
-        ) {
-          setInitialMsg(true);
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            { text: responseData.message, sender: "assistant" },
-          ]);
+        if (response.status === 200) {
+          const responseData = await response.json();
+          if (
+            responseData.message ===
+            `Hello, ${getCookieData.user_name}, how can I help you today?`
+          ) {
+            setInitialMsg(true);
+            setMessages((prevMessages) => [
+              ...prevMessages,
+              { text: responseData.message, sender: "assistant" },
+            ]);
+          }
         }
       })();
     }
@@ -89,8 +94,58 @@ export const Chat = () => {
       text: input ? input : inputText.trim(),
       sender: "user",
     };
+    const assistantMessage = {
+      text: "",
+      sender: "assistant",
+    };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setLoading(true);
+    if (
+      messages[messages.length - 1].text === "Enter your registration number"
+    ) {
+      const response = await validation(userMessage.text);
+      if (response.message) {
+        setWriting(true);
+        typewriterEffect(
+          response.message,
+          () => {
+            if (response.buttons) {
+              setHelpbtn(response.buttons);
+            }
+            setWriting(false); // Set writing to false when typing is complete
+          },
+          setMessages,
+          writingRef
+        );
+        setLoading(false);
+        setInputText("");
+      }
+
+      return;
+    }
+
+    if (correction.problem !== "") {
+      console.log(correction);
+      if (correction.qIndex < 2) {
+        if (correction.qIndex === 0) {
+          setCorrection((prevData) => ({
+            ...prevData,
+            incorrectData: userMessage.text,
+            qIndex: correction.qIndex + 1,
+          }));
+        }
+        if (correction.qIndex === 1) {
+          setCorrection((prevData) => ({
+            ...prevData,
+            correctData: userMessage.text,
+            qIndex: correction.qIndex + 1,
+          }));
+        }
+        return;
+      } else {
+        console.log(correction);
+      }
+    }
 
     const data = {
       message: {
@@ -98,11 +153,6 @@ export const Chat = () => {
       },
       user_email: user.email,
       user_id: userId,
-    };
-
-    const assistantMessage = {
-      text: "",
-      sender: "assistant",
     };
 
     try {
@@ -153,7 +203,7 @@ export const Chat = () => {
 
   const handleFirstMsg = async () => {
     try {
-      const url = "http://192.168.88.38:5005/start_chat";
+      const url = `${process.env.REACT_APP_BASE_URL}/start_chat`;
       const data = {
         user_name: user.name,
         user_email: user.email,
@@ -225,7 +275,7 @@ export const Chat = () => {
           Please ask about the education domain only.
         </div>
       </div>
-      <div className="message-container max-h-[400px] overflow-y-scroll p-2">
+      <div className="message-container max-h-[400px] overflow-y-scroll p-2 scroll-smooth">
         {initialMsg !== true && (
           <div className="flex container flex-col w-full bg-[#f4f6f6] rounded-lg p-3 box-border">
             <span className="my-1">
@@ -327,6 +377,55 @@ export const Chat = () => {
           </div>
         )}
         <HelpButton setClgList={setClgList} />
+        {correction.docState && (
+          <div className="flex">
+            {correction.proof ? (
+              <>
+                <a
+                  className="cursor-pointer my-auto ml-2"
+                  href={""}
+                  target="_blank"
+                >
+                  View Document
+                </a>
+                <div
+                  className="ml-2 my-auto cursor-pointer"
+                  name="mouDocument"
+                  onClick={() =>
+                    setCorrection((prevData) => ({
+                      ...prevData,
+                      proof: "",
+                    }))
+                  }
+                >
+                  <ImBin />
+                </div>
+              </>
+            ) : (
+              <label
+                className="custom-file-upload border  bg-gradient-to-br from-slate-100 to-slate-200
+              text-black/80
+              rounded-md
+              cursor-pointer
+              shadow-xl shadow-slate-300/60 p-2"
+              >
+                <input
+                  className="hidden"
+                  type="file"
+                  name="fileInput"
+                  accept=".pdf"
+                  onChange={(e) =>
+                    setCorrection((prevData) => ({
+                      ...prevData,
+                      proof: e.target.files[0],
+                    }))
+                  }
+                />
+                Upload File
+              </label>
+            )}
+          </div>
+        )}
         {clgList && (
           <div className="flex flex-col">
             {collgeList.map((ele, i) => {
@@ -405,7 +504,7 @@ export const Chat = () => {
               <div className="flex">
                 {writing ? (
                   <button
-                    className="px-[10px] rounded-full mr-1 bg-blue-300"
+                    className="px-[10px] rounded-full mr-1 ml-2 bg-blue-300"
                     onClick={stopTypingEffect}
                   >
                     <FaRegStopCircle fontSize={"20px"} color="white" />

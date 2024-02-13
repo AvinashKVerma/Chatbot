@@ -13,7 +13,7 @@ const Feedback = ({ setMessages, setHelpbtn }) => {
       user_id: userId,
       feedback_message: feedback,
     };
-    const response = await fetch("http://192.168.88.38:5005/feedback", {
+    const response = await fetch(`${process.env.REACT_APP_BASE_URL}/feedback`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

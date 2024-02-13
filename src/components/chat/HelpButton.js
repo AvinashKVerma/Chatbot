@@ -4,7 +4,8 @@ import ChatContext from "../../context/ChatContext";
 import CorrectionForm from "./CorrectionForm";
 
 const HelpButton = () => {
-  const { helpBtn, setHelpSubBtn, setHelpbtn, field } = useContext(ChatContext);
+  const { helpBtn, setHelpSubBtn, setHelpbtn, correctionForm } =
+    useContext(ChatContext);
   return (
     <>
       {Array.isArray(helpBtn) && (
@@ -21,7 +22,7 @@ const HelpButton = () => {
           })}
         </div>
       )}
-      {field !== "" && <CorrectionForm field={field} />}
+      {correctionForm && <CorrectionForm />}
     </>
   );
 };
