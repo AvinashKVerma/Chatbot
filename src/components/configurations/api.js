@@ -57,10 +57,7 @@ export const correctionApi = async (data, endpoint) => {
     const url = `${process.env.REACT_APP_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
+      body: data,
     });
     if (!response.ok) {
       throw new Error(`Network response was not ok: ${response.statusText}`);

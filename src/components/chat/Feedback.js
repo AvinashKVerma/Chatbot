@@ -6,7 +6,7 @@ import ChatContext from "../../context/ChatContext";
 const Feedback = ({ setMessages, setHelpbtn }) => {
   const [feedback, setFeedBack] = useState("");
   const [feedbackState, setFeedBackState] = useState(false);
-  const { userId, setField } = useContext(ChatContext);
+  const { userId, setField, setCorrection } = useContext(ChatContext);
   const handleFeedback = async () => {
     console.log(userId);
     const data = {
@@ -70,6 +70,15 @@ const Feedback = ({ setMessages, setHelpbtn }) => {
             setMessages([]);
             setHelpbtn(false);
             setField("");
+            setCorrection({
+              user_id: "",
+              problem: "",
+              qIndex: 0,
+              incorrectData: "",
+              correctData: "",
+              docState: false,
+              proof: "",
+            });
           }}
         >
           <RiDeleteBin5Fill className="mr-2 items-center" /> Clear Chat

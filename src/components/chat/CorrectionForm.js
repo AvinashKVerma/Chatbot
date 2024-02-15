@@ -17,7 +17,7 @@ const CorrectionForm = () => {
     setInputText,
     userId,
   } = useContext(ChatContext);
-  const inputState = problemStatement[correction.problem];
+  const inputState = problemStatement[correction.problem] || "";
 
   useEffect(() => {
     setQuestion([
@@ -31,6 +31,7 @@ const CorrectionForm = () => {
 
   useEffect(() => {
     if (
+      inputState[1] &&
       question[correction.qIndex] !== "" &&
       question[correction.qIndex] !== undefined
     ) {
@@ -55,18 +56,36 @@ const CorrectionForm = () => {
   useEffect(() => {
     if (correction.proof !== "") {
       (async () => {
-        const data = {
-          user_id: userId,
-          problem_statement: correction.problem,
-          wrong_data: correction.incorrectData,
-          right_data: correction.correctData,
-          proof: correction.correctData,
-        };
-        console.log(correction);
-        const response = await correctionApi(data, inputState[0]);
-        console.log(response);
+        const formData = new FormData();
+        formData.append("user_id", userId);
+        formData.append("problem_statement", correction.problem);
+        formData.append("wrong_data", correction.incorrectData);
+        formData.append("right_data", correction.correctData);
+        formData.append("proof", correction.proof);
+        const response = await correctionApi(formData, inputState[0]);
+        if (response.message) {
+          setCorrection({
+            user_id: "",
+            problem: "",
+            qIndex: 0,
+            incorrectData: "",
+            correctData: "",
+            docState: false,
+            proof: "",
+          });
+          setWriting(true);
+          typewriterEffect(
+            response.message,
+            () => setWriting(false), // Set writing to false when typing is complete
+            setMessages,
+            writingRef
+          );
+          setLoading(false);
+          setInputText("");
+        }
       })();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [correction.proof]);
 };
 

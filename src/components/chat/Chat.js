@@ -101,6 +101,7 @@ export const Chat = () => {
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setLoading(true);
     if (
+      messages.length > 0 &&
       messages[messages.length - 1].text === "Enter your registration number"
     ) {
       const response = await validation(userMessage.text);
@@ -120,12 +121,10 @@ export const Chat = () => {
         setLoading(false);
         setInputText("");
       }
-
       return;
     }
 
     if (correction.problem !== "") {
-      console.log(correction);
       if (correction.qIndex < 2) {
         if (correction.qIndex === 0) {
           setCorrection((prevData) => ({
@@ -413,13 +412,14 @@ export const Chat = () => {
                   className="hidden"
                   type="file"
                   name="fileInput"
-                  accept=".pdf"
-                  onChange={(e) =>
+                  accept="all"
+                  onChange={(e) => {
+                    console.log(messages);
                     setCorrection((prevData) => ({
                       ...prevData,
                       proof: e.target.files[0],
-                    }))
-                  }
+                    }));
+                  }}
                 />
                 Upload File
               </label>

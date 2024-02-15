@@ -6,6 +6,7 @@ export const typewriterEffect = (
 ) => {
   let i = 0;
   const delay = 50;
+
   setMessages((prevMessages) => [
     ...prevMessages,
     {
